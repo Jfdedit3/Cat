@@ -13,8 +13,9 @@ const allowedContentTypes = [
   "application/zip",
   "application/x-7z-compressed",
   "application/x-rar-compressed",
-  "text/*",
-  "application/octet-stream"
+  "application/vnd.android.package-archive",
+  "application/octet-stream",
+  "text/*"
 ];
 
 export async function POST(request) {
