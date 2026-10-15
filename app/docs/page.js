@@ -96,7 +96,7 @@ export default function DocsPage() {
         <p>Ne partage jamais ce jeton et ne le mets pas dans le code public du site.</p>
         <h3>Commande cURL</h3>
         <p>Remplace le jeton et le <code>pathname</code> par les valeurs qui te correspondent, en utilisant le <code>pathname</code> exact retourné par l’API :</p>
-        <code style={code}>curl -X DELETE "{site}/api/files" \\{"\n"}  -H "Authorization: Bearer TON_CAT_ADMIN_TOKEN" \\{"\n"}  -H "Content-Type: application/json" \\{"\n"}  -d '{{"pathname":"photo.png"}}'</code>
+        <code style={code}>{"curl -X DELETE \"" + site + "/api/files\" \\\n  -H \"Authorization: Bearer TON_CAT_ADMIN_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\\\"pathname\\\":\\\"photo.png\\\"}'"}</code>
         <p>Une réponse avec <code>success: true</code> confirme la suppression. <code>401</code> signifie que le jeton est absent ou incorrect ; <code>404</code> signifie que le fichier est introuvable ; <code>503</code> signifie que le jeton n’est pas configuré sur Vercel.</p>
       </section>
 
