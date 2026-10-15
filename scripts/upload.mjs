@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-import { openAsBlob, stat } from "node:fs";
+import { openAsBlob } from "node:fs";
+import { stat } from "node:fs/promises";
 import { basename, resolve, extname } from "node:path";
 import { upload } from "@vercel/blob/client";
 
