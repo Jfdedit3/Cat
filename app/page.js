@@ -24,7 +24,7 @@ function getExtension(name = "") {
 }
 
 function detectType(file) {
-  const contentType = (file.contentType || "").toLowerCase();
+  const contentType = (file.contentType || file.type || "").toLowerCase();
   const ext = getExtension(file.pathname || file.url || "");
 
   if (contentType.startsWith("image/")) return "image";
@@ -49,7 +49,7 @@ function detectType(file) {
 }
 
 function getMimeType(file) {
-  const contentType = (file.contentType || "").toLowerCase();
+  const contentType = (file.contentType || file.type || "").toLowerCase();
   if (contentType && contentType !== "application/octet-stream") return contentType;
 
   const ext = getExtension(file.pathname || file.url || "");
@@ -108,7 +108,7 @@ export default function Home() {
 
       setFiles(data.blobs || []);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Impossible de charger les fichiers.");
     } finally {
       setLoading(false);
     }
@@ -243,14 +243,22 @@ export default function Home() {
         <div className="toolbar">
           <div>
             <h2>Galerie</h2>
-            <span className="count">{files.length} fichier(s)</span>
+            <span className="count">
+              {loading ? "Chargement…" : `${files.length} fichier(s)`}
+            </span>
           </div>
         </div>
 
-        {error && <div className="panel error">{error}</div>}
+        {error && <div className="panel error">Erreur de chargement : {error}</div>}
 
         {loading ? (
-          <div className="panel empty">Chargement de la galerie…</div>
+          <div className="panel empty" role="status" aria-live="polite">
+            Chargement de la galerie…
+          </div>
+        ) : error ? (
+          <div className="panel empty">
+            La galerie n’a pas pu être chargée. Vérifie ta connexion puis clique sur « Actualiser ».
+          </div>
         ) : files.length === 0 ? (
           <div className="panel empty">Aucun fichier pour le moment.</div>
         ) : (
@@ -275,12 +283,7 @@ export default function Home() {
                     )}
 
                     {type === "video" && (
-                      <video
-                        controls
-                        preload="metadata"
-                        playsInline
-                        src={file.url}
-                      >
+                      <video controls preload="metadata" playsInline src={file.url}>
                         {mimeType && <source src={file.url} type={mimeType} />}
                         Ton navigateur ne peut pas lire cette vidéo.
                       </video>
@@ -318,18 +321,11 @@ export default function Home() {
                         Ouvrir
                       </a>
 
-                      <button
-                        className="btn"
-                        onClick={() => copyUrl(file.url)}
-                      >
+                      <button className="btn" onClick={() => copyUrl(file.url)}>
                         Copier
                       </button>
 
-                      <a
-                        className="btn"
-                        href={file.downloadUrl || file.url}
-                        download
-                      >
+                      <a className="btn" href={file.downloadUrl || file.url} download>
                         Télécharger
                       </a>
                     </div>
