@@ -73,8 +73,35 @@ export default function DocsPage() {
         <a className="btn" href="https://github.com/Jfdedit3/Cat/blob/main/scripts/upload.mjs" target="_blank" rel="noreferrer">Voir le script sur GitHub ↗</a>
       </section>
 
+
       <section style={panel}>
-        <h2>4. Endpoints disponibles</h2>
+        <h2>4. Récupérer tous les noms des fichiers</h2>
+        <p><strong>Méthode :</strong> GET</p>
+        <code style={code}>{site}/api/files</code>
+        <code style={code}>curl -s "{site}/api/files"</code>
+        <p>La réponse JSON contient <code>names</code> (tous les noms de fichiers), <code>blobs</code> (métadonnées complètes) et <code>count</code> (nombre de fichiers). Pour n’afficher que les noms avec jq :</p>
+        <code style={code}>curl -s "{site}/api/files" | jq '.names'</code>
+        <a className="btn" href={site + "/api/files"} target="_blank" rel="noreferrer">Afficher la liste JSON ↗</a>
+      </section>
+
+      <section style={panel}>
+        <h2>5. Supprimer un fichier via l’API</h2>
+        <p>La suppression utilise <strong>DELETE</strong> <code>/api/files</code> et nécessite un jeton d’administration. Cette protection évite qu’un visiteur puisse supprimer tes fichiers.</p>
+        <h3>Configurer le jeton</h3>
+        <ol>
+          <li>Dans Vercel, ouvre ton projet puis <strong>Settings → Environment Variables</strong>.</li>
+          <li>Ajoute <code>CAT_ADMIN_TOKEN</code> avec une valeur secrète longue et aléatoire.</li>
+          <li>Enregistre puis redéploie le site.</li>
+        </ol>
+        <p>Ne partage jamais ce jeton et ne le mets pas dans le code public du site.</p>
+        <h3>Commande cURL</h3>
+        <p>Remplace le jeton et le <code>pathname</code> par les valeurs qui te correspondent, en utilisant le <code>pathname</code> exact retourné par l’API :</p>
+        <code style={code}>curl -X DELETE "{site}/api/files" \\{"\n"}  -H "Authorization: Bearer TON_CAT_ADMIN_TOKEN" \\{"\n"}  -H "Content-Type: application/json" \\{"\n"}  -d '{{"pathname":"photo.png"}}'</code>
+        <p>Une réponse avec <code>success: true</code> confirme la suppression. <code>401</code> signifie que le jeton est absent ou incorrect ; <code>404</code> signifie que le fichier est introuvable ; <code>503</code> signifie que le jeton n’est pas configuré sur Vercel.</p>
+      </section>
+
+      <section style={panel}>
+        <h2>6. Endpoints disponibles</h2>
         <p><strong>GET</strong> <code>/api/files</code> — récupère la liste des fichiers.</p>
         <p><strong>POST</strong> <code>/api/upload</code> — endpoint de négociation utilisé par le SDK Vercel Blob ; ce n’est pas un endpoint multipart classique pour cURL.</p>
       </section>
