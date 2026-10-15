@@ -52,7 +52,7 @@ export default function DocsPage() {
         <code style={code}>{site}/api/files</code>
         <p>Ouvre cette adresse dans ton navigateur ou utilise la commande :</p>
         <code style={code}>curl "{site}/api/files"</code>
-        <p>La réponse JSON contient notamment <code>blobs</code>, avec les URL, noms, tailles, types MIME et dates des fichiers disponibles.</p>
+        <p>La réponse JSON contient <code>names</code> (noms de fichiers), <code>blobs</code> (métadonnées) et <code>count</code> (nombre total). Chaque entrée de <code>blobs</code> expose notamment <code>url</code>, <code>downloadUrl</code>, <code>pathname</code>, <code>name</code>, <code>size</code>, <code>contentType</code>, <code>type</code> (alias MIME) et <code>uploadedAt</code>.</p>
         <a className="btn" href={site + "/api/files"} target="_blank" rel="noreferrer">Tester l’API ↗</a>
       </section>
 
@@ -66,43 +66,45 @@ export default function DocsPage() {
           <li>Un stockage Vercel Blob associé au projet, avec la variable <code>BLOB_READ_WRITE_TOKEN</code> configurée sur Vercel.</li>
         </ul>
         <h3>Commandes</h3>
-        <code style={code}>git clone https://github.com/Jfdedit3/Cat.git{"\n"}cd Cat{"\n"}npm install</code>
+        <code style={code}>{"git clone https://github.com/Jfdedit3/Cat.git\ncd Cat\nnpm install"}</code>
         <p>Depuis le dossier du projet, envoie le fichier en remplaçant le chemin par celui de ton fichier :</p>
         <code style={code}>node scripts/upload.mjs "./application.apk" "{site}"</code>
         <p>Le script affiche la progression puis renvoie les informations du fichier, dont son URL publique.</p>
         <a className="btn" href="https://github.com/Jfdedit3/Cat/blob/main/scripts/upload.mjs" target="_blank" rel="noreferrer">Voir le script sur GitHub ↗</a>
       </section>
 
-
       <section style={panel}>
         <h2>4. Récupérer tous les noms des fichiers</h2>
         <p><strong>Méthode :</strong> GET</p>
         <code style={code}>{site}/api/files</code>
-        <code style={code}>curl -s "{site}/api/files"</code>
-        <p>La réponse JSON contient <code>names</code> (tous les noms de fichiers), <code>blobs</code> (métadonnées complètes) et <code>count</code> (nombre de fichiers). Pour n’afficher que les noms avec jq :</p>
-        <code style={code}>curl -s "{site}/api/files" | jq '.names'</code>
+        <p>Pour afficher uniquement les noms :</p>
+        <code style={code}>curl -s "{site}/api/files" | jq -r '.names[]'</code>
+        <p>Pour afficher aussi les chemins exacts nécessaires à la suppression :</p>
+        <code style={code}>curl -s "{site}/api/files" | jq -r '.blobs[] | [.name, .pathname] | @tsv'</code>
         <a className="btn" href={site + "/api/files"} target="_blank" rel="noreferrer">Afficher la liste JSON ↗</a>
       </section>
 
       <section style={panel}>
         <h2>5. Supprimer un fichier via l’API</h2>
-        <p>La suppression utilise <strong>DELETE</strong> <code>/api/files</code> et nécessite un jeton d’administration. Cette protection évite qu’un visiteur puisse supprimer tes fichiers.</p>
+        <p>La suppression utilise <strong>DELETE</strong> <code>/api/files</code> et nécessite un jeton d’administration robuste. La suppression est définitive : vérifie toujours le pathname avant de lancer la commande.</p>
         <h3>Configurer le jeton</h3>
         <ol>
-          <li>Dans Vercel, ouvre ton projet puis <strong>Settings → Environment Variables</strong>.</li>
-          <li>Ajoute <code>CAT_ADMIN_TOKEN</code> avec une valeur secrète longue et aléatoire.</li>
-          <li>Enregistre puis redéploie le site.</li>
+          <li>Génère un secret avec <code>openssl rand -hex 32</code> (64 caractères hexadécimaux aléatoires).</li>
+          <li>Dans Vercel, ouvre le projet puis <strong>Settings → Environment Variables</strong>.</li>
+          <li>Définis <code>CAT_ADMIN_TOKEN</code> avec ce secret, pour l’environnement Production.</li>
+          <li>Enregistre puis redéploie le site. Le serveur refuse les jetons de moins de 32 caractères.</li>
+          <li>Mets à jour le jeton utilisé par tes scripts locaux. Ne le place jamais dans le code public du site.</li>
         </ol>
-        <p>Ne partage jamais ce jeton et ne le mets pas dans le code public du site.</p>
         <h3>Commande cURL</h3>
-        <p>Remplace le jeton et le <code>pathname</code> par les valeurs qui te correspondent, en utilisant le <code>pathname</code> exact retourné par l’API :</p>
-        <code style={code}>{"curl -X DELETE \"" + site + "/api/files\" \\\n  -H \"Authorization: Bearer TON_CAT_ADMIN_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\\\"pathname\\\":\\\"photo.png\\\"}'"}</code>
-        <p>Une réponse avec <code>success: true</code> confirme la suppression. <code>401</code> signifie que le jeton est absent ou incorrect ; <code>404</code> signifie que le fichier est introuvable ; <code>503</code> signifie que le jeton n’est pas configuré sur Vercel.</p>
+        <p>Prérequis : <code>jq</code> et la variable d’environnement <code>CAT_ADMIN_TOKEN</code> définie dans ton terminal. La première commande affiche les noms et les <code>pathname</code> exacts. Copie le pathname du fichier voulu dans la variable ci-dessous : ne mets pas un nom inventé comme <code>photo.png</code>.</p>
+        <code style={code}>{"curl -s \"" + site + "/api/files\" | jq -r '.blobs[] | [.name, .pathname] | @tsv'\n\n# Colle ici le pathname exact renvoyé par la commande précédente\nPATHNAME='COLLE_ICI_LE_PATHNAME_EXACT'\n\ncurl -X DELETE \"" + site + "/api/files\" \\\n  -H \"Authorization: Bearer $CAT_ADMIN_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  -d \"$(jq -n --arg pathname \"$PATHNAME\" '{pathname:$pathname}')\""}</code>
+        <p>Une réponse avec <code>success: true</code> confirme la suppression. <code>401</code> signifie que le jeton est absent ou incorrect ; <code>404</code> signifie que le pathname exact est introuvable ; <code>503</code> signifie que le jeton est absent ou trop court.</p>
       </section>
 
       <section style={panel}>
         <h2>6. Endpoints disponibles</h2>
-        <p><strong>GET</strong> <code>/api/files</code> — récupère la liste des fichiers.</p>
+        <p><strong>GET</strong> <code>/api/files</code> — récupère la liste des fichiers et leurs métadonnées.</p>
+        <p><strong>DELETE</strong> <code>/api/files</code> — supprime un fichier après vérification du jeton et du pathname exact.</p>
         <p><strong>POST</strong> <code>/api/upload</code> — endpoint de négociation utilisé par le SDK Vercel Blob ; ce n’est pas un endpoint multipart classique pour cURL.</p>
       </section>
 
