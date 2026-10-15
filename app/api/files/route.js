@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const MIN_ADMIN_TOKEN_LENGTH = 32;
+
 async function listAllBlobs() {
   const blobs = [];
   let cursor;
@@ -27,7 +29,8 @@ export async function GET() {
       name: blob.pathname.split("/").pop(),
       size: blob.size,
       uploadedAt: blob.uploadedAt,
-      contentType: blob.contentType
+      contentType: blob.contentType || "application/octet-stream",
+      type: blob.contentType || "application/octet-stream"
     }));
 
     return NextResponse.json({
@@ -47,9 +50,11 @@ export async function GET() {
 export async function DELETE(request) {
   const adminToken = process.env.CAT_ADMIN_TOKEN;
 
-  if (!adminToken) {
+  if (!adminToken || adminToken.length < MIN_ADMIN_TOKEN_LENGTH) {
     return NextResponse.json(
-      { error: "La suppression n'est pas configurée. Ajoute CAT_ADMIN_TOKEN dans les variables d'environnement Vercel." },
+      {
+        error: "Suppression désactivée : CAT_ADMIN_TOKEN doit être configuré sur Vercel avec au moins 32 caractères aléatoires, puis le site doit être redéployé."
+      },
       { status: 503 }
     );
   }
