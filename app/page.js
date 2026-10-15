@@ -182,6 +182,7 @@ export default function Home() {
             dans Vercel Blob, puis retrouve-les directement dans cette galerie.
           </p>
         </div>
+        <a className="btn" href="/docs" style={{ flexShrink: 0, textDecoration: "none" }}>Documentation API ↗</a>
       </header>
 
       <section className="panel upload">
