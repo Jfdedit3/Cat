@@ -97,7 +97,7 @@ export default function DocsPage() {
         </ol>
         <h3>Commande cURL</h3>
         <p>Prérequis : <code>jq</code> et la variable d’environnement <code>CAT_ADMIN_TOKEN</code> définie dans ton terminal. La première commande affiche les noms et les <code>pathname</code> exacts. Copie le pathname du fichier voulu dans la variable ci-dessous : ne mets pas un nom inventé comme <code>photo.png</code>.</p>
-        <code style={code}>{"curl -s \"" + site + "/api/files\" | jq -r '.blobs[] | [.name, .pathname] | @tsv'\n\n# Colle ici le pathname exact renvoyé par la commande précédente\nPATHNAME='COLLE_ICI_LE_PATHNAME_EXACT'\n\ncurl -X DELETE \"" + site + "/api/files\" \\\n  -H \"Authorization: Bearer $CAT_ADMIN_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  -d \"$(jq -n --arg pathname \"$PATHNAME\" '{pathname:$pathname}')\""}</code>
+        <code style={code}>{`curl -s "${site}/api/files" | jq -r '.blobs[] | [.name, .pathname] | @tsv'\n\n# Colle ici le pathname exact renvoyé par la commande précédente\nPATHNAME='COLLE_ICI_LE_PATHNAME_EXACT'\n\ncurl -X DELETE "${site}/api/files" -H "Authorization: Bearer $CAT_ADMIN_TOKEN" -H "Content-Type: application/json" -d "$(jq -n --arg pathname "$PATHNAME" '{pathname:$pathname}')"`}</code>
         <p>Une réponse avec <code>success: true</code> confirme la suppression. <code>401</code> signifie que le jeton est absent ou incorrect ; <code>404</code> signifie que le pathname exact est introuvable ; <code>503</code> signifie que le jeton est absent ou trop court.</p>
       </section>
 
