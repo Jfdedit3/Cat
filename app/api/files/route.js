@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const MIN_ADMIN_TOKEN_LENGTH = 32;
+const MIN_ADMIN_TOKEN_LENGTH = 5;
 
 async function listAllBlobs() {
   const blobs = [];
@@ -53,7 +53,7 @@ export async function DELETE(request) {
   if (!adminToken || adminToken.length < MIN_ADMIN_TOKEN_LENGTH) {
     return NextResponse.json(
       {
-        error: "Suppression désactivée : CAT_ADMIN_TOKEN doit être configuré sur Vercel avec au moins 32 caractères aléatoires, puis le site doit être redéployé."
+        error: "Suppression désactivée : CAT_ADMIN_TOKEN doit être configuré sur Vercel avec au moins 5 caractères, puis le site doit être redéployé."
       },
       { status: 503 }
     );
